@@ -1,10 +1,13 @@
 *~
 *.o
+core
 autom4te.cache/
+autoscan.log
 Makefile
 config.h
 config.log
 config.status
 src/.deps/
 src/Makefile
+src/muniq
 stamp-h1

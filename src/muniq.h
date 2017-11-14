@@ -8,7 +8,13 @@
 using namespace std;
 
 class Muniq : public vector<File> {
+private:
+    int _parallel;
+    
 public:
+    Muniq(int parallel = 0) :
+        _parallel(parallel) {
+    }
     void process(const string &filename);
     void process(istream &in);
     void output(bool display_count);

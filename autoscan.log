@@ -1,5 +1,0 @@
-autoscan: warning: missing AC_TYPE_SIZE_T wanted by: 
-	src/file.h:12
-	src/file.h:15
-	src/file.h:16
-	src/file.h:17

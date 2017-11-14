@@ -11,6 +11,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_PROG_CXX
 
 # Checks for libraries.
+AC_CHECK_LIB(pthread, main)
 
 # Checks for header files.
 AC_CHECK_HEADERS([unistd.h])

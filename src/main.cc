@@ -9,11 +9,15 @@ int main (int argc, char *argv[])
 {
     int opt;
     bool display_count = false;
+    int parallel = 0;
 
-    while ((opt = getopt(argc, argv, "c")) != -1) {
+    while ((opt = getopt(argc, argv, "cP:")) != -1) {
         switch (opt) {
         case 'c':
             display_count = true;
+            break;
+        case 'P':
+            parallel = atoi(optarg);
             break;
         }
     }
@@ -21,7 +25,7 @@ int main (int argc, char *argv[])
     argc -= optind;
     argv += optind;
 
-    Muniq muniq;
+    Muniq muniq(parallel);
     
     if (argc) {
         for (int i = 0; i < argc; i++) {

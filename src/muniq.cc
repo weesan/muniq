@@ -2,12 +2,12 @@
 
 void Muniq::process (const string &filename)
 {
-    push_back(File(filename));
+    push_back(File(filename, _parallel));
 }
 
 void Muniq::process(istream &in)
 {
-    push_back(File(in));
+    push_back(File(in, _parallel));
 }
 
 void Muniq::output (bool display_count)
