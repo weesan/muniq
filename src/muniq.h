@@ -2,21 +2,27 @@
 #define MUNIQ_H
 
 #include <string>
-#include <vector>
-#include "file.h"
+#include <unordered_map>
+#include "thread/src/thread.h"
 
 using namespace std;
 
-class Muniq : public vector<File> {
+class Muniq : public ThreadPool {
 private:
-    int _parallel;
+    unordered_map<string, size_t> _freq;
+    Mutex _mutex_freq;
     
 public:
     Muniq(int parallel = 0) :
-        _parallel(parallel) {
+        ThreadPool(parallel) {
+    }
+    void incFreq(const string &line) {
+        _mutex_freq.lock();
+        _freq[line]++;
+        _mutex_freq.unlock();
     }
     void process(const string &filename);
-    void process(istream &in);
+    void process(istream &is);
     void output(bool display_count);
 };
 
