@@ -16,9 +16,18 @@ public:
         _line(line) {
     }
     void run(void) {
-        _muniq.incFreq(_line);
+        //_muniq.incFreq(_line);
+        _muniq.freqs(pthread_self())[_line]++;
     }
 };
+
+Muniq::Muniq(int parallel = 0) :
+    ThreadPool(parallel) {
+    for (auto itr = begin(); itr != end(); ++itr) {
+        //cerr << (*itr)->tid() << endl;
+        _freqs[(*itr)->tid()] = FreqTable();
+    }
+}
 
 void Muniq::process (const string &filename)
 {
@@ -42,10 +51,11 @@ void Muniq::process(istream &is)
         //cout << line << endl;
         if (size()) {
             addTask(new CountTask(*this, line));
-            
+
             while (queueSize() >= MAX_QUEUE_SIZE) {
                 sleep(0.5);
             }
+
         } else {
             _freq[line]++;
         }
@@ -57,11 +67,15 @@ void Muniq::process(istream &is)
     }
 }
 
-void Muniq::output (bool display_count)
+void Muniq::output (bool display_count = false, bool display_count_after = false)
 {
     for (auto itr = _freq.begin(); itr != _freq.end(); ++itr) {
         if (display_count) {
-            cout << setw(7) << itr->second << " " << itr->first << endl;
+            if (display_count_after) {
+                cout << itr->first << '#' << itr->second << endl;
+            } else {
+                cout << setw(7) << itr->second << " " << itr->first << endl;
+            }
         } else {
             cout << itr->first << endl;
         }

@@ -9,10 +9,13 @@ int main (int argc, char *argv[])
 {
     int opt;
     bool display_count = false;
+    bool display_count_after = false;
     int parallel = 0;
 
-    while ((opt = getopt(argc, argv, "cP:")) != -1) {
+    while ((opt = getopt(argc, argv, "acP:")) != -1) {
         switch (opt) {
+        case 'a':
+            display_count_after = true;
         case 'c':
             display_count = true;
             break;
@@ -35,7 +38,7 @@ int main (int argc, char *argv[])
         muniq.process(cin);
     }
 
-    muniq.output(display_count);
+    muniq.output(display_count, display_count_after);
         
     return 0;
 }
