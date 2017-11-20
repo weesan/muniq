@@ -4,29 +4,34 @@
 #include "muniq.h"
 
 #define MAX_QUEUE_SIZE    1000
+#define MAX_BATCH_SIZE    1000
 
 class CountTask : public Task {
 private:
     Muniq &_muniq;
-    string _line;
+    vector<string> _lines;
     
 public:
-    CountTask(Muniq &muniq, const string &line) :
+    CountTask(Muniq &muniq, const vector<string> &lines) :
         _muniq(muniq),
-        _line(line) {
+        _lines(lines) {
     }
     void run(void) {
-        //_muniq.incFreq(_line);
-        _muniq.freqs(pthread_self())[_line]++;
+        for (int i = 0; i < _lines.size(); i++) {
+            //_muniq.incFreq(_lines[i]);
+            _muniq.freqs(pthread_self())[_lines[i]]++;
+        }
     }
 };
 
 Muniq::Muniq(int parallel = 0) :
     ThreadPool(parallel) {
+    /*
     for (auto itr = begin(); itr != end(); ++itr) {
         //cerr << (*itr)->tid() << endl;
         _freqs[(*itr)->tid()] = FreqTable();
     }
+    */
 }
 
 void Muniq::process (const string &filename)
@@ -43,15 +48,21 @@ void Muniq::process (const string &filename)
 void Muniq::process(istream &is)
 {
     string line;
+    vector<string> lines;
 
     while (getline(is, line)) {
-        if (!line.size()) {
+        if (line.empty()) {
             continue;
         }
         //cout << line << endl;
         if (size()) {
-            addTask(new CountTask(*this, line));
-
+            lines.push_back(line);
+            
+            if (lines.size() == MAX_BATCH_SIZE) {
+                addTask(new CountTask(*this, lines));
+                lines.clear();
+            }
+            
             while (queueSize() >= MAX_QUEUE_SIZE) {
                 sleep(0.5);
             }
@@ -62,8 +73,17 @@ void Muniq::process(istream &is)
     }
 
     if (size()) {
+        if (lines.size()) {
+            addTask(new CountTask(*this, lines));
+        }
+    
         done();
         wait();
+        
+        // Combine the freq table per thread into the main thread.
+        for (auto itr = _freqs.begin(); itr != _freqs.end(); ++itr) {
+            _freq.merge(itr->second);
+        }
     }
 }
 
