@@ -99,8 +99,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_muniq_OBJECTS = file.$(OBJEXT) freq_table.$(OBJEXT) muniq.$(OBJEXT) \
-	main.$(OBJEXT)
+am_muniq_OBJECTS = freq_table.$(OBJEXT) muniq.$(OBJEXT) main.$(OBJEXT)
 muniq_OBJECTS = $(am_muniq_OBJECTS)
 muniq_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -265,8 +264,6 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 muniq_SOURCES = \
-	file.cc		\
-	file.h		\
 	freq_table.cc	\
 	freq_table.h	\
 	muniq.cc 	\
@@ -360,7 +357,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freq_table.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/muniq.Po@am__quote@

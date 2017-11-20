@@ -3,9 +3,6 @@
 #include <fstream>
 #include "muniq.h"
 
-#define MAX_QUEUE_SIZE    1000
-#define MAX_BATCH_SIZE    1000
-
 class CountTask : public Task {
 private:
     Muniq &_muniq;
@@ -17,12 +14,28 @@ public:
         _filename(filename) {
     }
     void run(void) {
-        _muniq.files(pthread_self()).process(_filename);
+        ifstream ifs(_filename);
+        if (!ifs) { 
+            cerr << "Failed to open " << _filename << endl;
+            return;
+        } else {
+            string line;
+
+            while (getline(ifs, line)) {
+                if (line.empty()) {
+                    continue;
+                }
+                _muniq.incFreq(line);
+            }
+        }
     }
 };
 
 Muniq::Muniq(int parallel = 0) :
     ThreadPool(parallel) {
+    for (int i = 0; i < 101; i++) {
+        _freqs.push_back(FreqTable());
+    }
 }
 
 // Multi-threaded version.
@@ -47,24 +60,15 @@ void Muniq::process (istream &is)
 void Muniq::aggregate(void) {
     // Signal the thread pool that we are done queuing the tasks and
     // wait for the tasks to finish.
-    done();
-    wait();
-
-    // Aggregate the counts from each thread.
-    for (auto itr = _files.begin(); itr != _files.end(); ++itr) {
-        if (itr == _files.begin()) {
-            // Simply copy over the first one.
-            _freq = itr->second;
-        } else {
-            _freq.merge(itr->second);
-        }
-        // Clear the source count.
-        itr->second.clear();
+    if (size()) {
+        done();
+        wait();
     }
 }
 
 void Muniq::output (bool display_count = false, bool display_count_after = false)
 {
+    // Single-threaded version.
     for (auto itr = _freq.begin(); itr != _freq.end(); ++itr) {
         if (display_count) {
             if (display_count_after) {
@@ -74,6 +78,21 @@ void Muniq::output (bool display_count = false, bool display_count_after = false
             }
         } else {
             cout << itr->first << endl;
+        }
+    }
+
+    // Multi-threaded version.
+    for (int i = 0; i < _freqs.size(); i++) {
+        for (auto itr = _freqs[i].begin(); itr != _freqs[i].end(); ++itr) {
+            if (display_count) {
+                if (display_count_after) {
+                    cout << itr->first << '#' << itr->second << endl;
+                } else {
+                    cout << setw(7) << itr->second << " " << itr->first << endl;
+                }
+            } else {
+                cout << itr->first << endl;
+            }
         }
     }
 }
