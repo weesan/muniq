@@ -1,5 +1,7 @@
 bin_PROGRAMS = muniq
 muniq_SOURCES = 	\
+	file.cc		\
+	file.h		\
 	freq_table.cc	\
 	freq_table.h	\
 	muniq.cc 	\

@@ -9,81 +9,57 @@
 class CountTask : public Task {
 private:
     Muniq &_muniq;
-    vector<string> _lines;
+    string _filename;
     
 public:
-    CountTask(Muniq &muniq, const vector<string> &lines) :
+    CountTask(Muniq &muniq, const string  &filename) :
         _muniq(muniq),
-        _lines(lines) {
+        _filename(filename) {
     }
     void run(void) {
-        for (int i = 0; i < _lines.size(); i++) {
-            //_muniq.incFreq(_lines[i]);
-            _muniq.freqs(pthread_self())[_lines[i]]++;
-        }
+        _muniq.files(pthread_self()).process(_filename);
     }
 };
 
 Muniq::Muniq(int parallel = 0) :
     ThreadPool(parallel) {
-    /*
-    for (auto itr = begin(); itr != end(); ++itr) {
-        //cerr << (*itr)->tid() << endl;
-        _freqs[(*itr)->tid()] = FreqTable();
-    }
-    */
 }
 
+// Multi-threaded version.
 void Muniq::process (const string &filename)
 {
-    ifstream ifs(filename);
-    if (!ifs) { 
-        cerr << "Failed to open " << filename << endl;
-        return;
-    } else {
-        process(ifs);
-    }
+    addTask(new CountTask(*this, filename));
 }
 
-void Muniq::process(istream &is)
+// Single-threaded version reading from stdin.
+void Muniq::process (istream &is)
 {
     string line;
-    vector<string> lines;
 
     while (getline(is, line)) {
         if (line.empty()) {
             continue;
         }
-        //cout << line << endl;
-        if (size()) {
-            lines.push_back(line);
-            
-            if (lines.size() == MAX_BATCH_SIZE) {
-                addTask(new CountTask(*this, lines));
-                lines.clear();
-            }
-            
-            while (queueSize() >= MAX_QUEUE_SIZE) {
-                sleep(0.5);
-            }
-
-        } else {
-            _freq[line]++;
-        }
+        _freq[line]++;
     }
+}
 
-    if (size()) {
-        if (lines.size()) {
-            addTask(new CountTask(*this, lines));
-        }
-    
-        done();
-        wait();
-        
-        // Combine the freq table per thread into the main thread.
-        for (auto itr = _freqs.begin(); itr != _freqs.end(); ++itr) {
+void Muniq::aggregate(void) {
+    // Signal the thread pool that we are done queuing the tasks and
+    // wait for the tasks to finish.
+    done();
+    wait();
+
+    // Aggregate the counts from each thread.
+    for (auto itr = _files.begin(); itr != _files.end(); ++itr) {
+        if (itr == _files.begin()) {
+            // Simply copy over the first one.
+            _freq = itr->second;
+        } else {
             _freq.merge(itr->second);
         }
+        // Clear the source count.
+        itr->second.clear();
     }
 }
 

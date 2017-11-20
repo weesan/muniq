@@ -38,6 +38,7 @@ int main (int argc, char *argv[])
         muniq.process(cin);
     }
 
+    muniq.aggregate();
     muniq.output(display_count, display_count_after);
         
     return 0;
