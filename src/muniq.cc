@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 #include "muniq.h"
 
 class CountTask : public Task {
@@ -13,11 +14,11 @@ public:
         _muniq(muniq),
         _filename(filename) {
     }
-    void run(void) {
+    bool run(void) {
         ifstream ifs(_filename);
         if (!ifs) { 
             cerr << "Failed to open " << _filename << endl;
-            return;
+            return true;
         } else {
             string line;
 
@@ -28,13 +29,43 @@ public:
                 _muniq.incFreq(line);
             }
         }
+        return true;
     }
 };
 
-Muniq::Muniq(int parallel = 0) :
-    ThreadPool(parallel) {
+class OutputTask : public Task {
+private:
+    const FreqTable &_freq_table;
+    int _part;
+    string _output_dir;
+
+public:
+    OutputTask(const FreqTable &freq_table, const string &output_dir, int part) :
+        _freq_table(freq_table),
+        _output_dir(output_dir),
+        _part(part) {
+    }
+    bool run(void) {
+        stringstream ss;
+        ss << _output_dir << "/part" << setw(4) << setfill('0') << _part;
+        ofstream ofs(ss.str());
+        if (!ofs) {
+            cerr << "Failed to open " << ss.str() << endl;
+            return true;
+        } else {
+            ofs << _freq_table;
+        }
+        return true;
+    }
+};
+
+Muniq::Muniq(int parallel,
+             bool display_count,
+             bool display_count_after) :
+    ThreadPool(parallel),
+    _freq(FreqTable(display_count, display_count_after)) {
     for (int i = 0; i < 101; i++) {
-        _freqs.push_back(FreqTable());
+        _freqs.push_back(FreqTable(display_count, display_count_after));
     }
 }
 
@@ -57,42 +88,33 @@ void Muniq::process (istream &is)
     }
 }
 
-void Muniq::aggregate(void) {
-    // Signal the thread pool that we are done queuing the tasks and
-    // wait for the tasks to finish.
-    if (size()) {
-        done();
-        wait();
-    }
-}
-
-void Muniq::output (bool display_count = false, bool display_count_after = false)
+void Muniq::output (const string &output_dir)
 {
-    // Single-threaded version.
-    for (auto itr = _freq.begin(); itr != _freq.end(); ++itr) {
-        if (display_count) {
-            if (display_count_after) {
-                cout << itr->first << '#' << itr->second << endl;
-            } else {
-                cout << setw(7) << itr->second << " " << itr->first << endl;
-            }
-        } else {
-            cout << itr->first << endl;
-        }
-    }
+    // Single-threaded version will always output to stdout if any.
+    cout << _freq;
 
     // Multi-threaded version.
-    for (int i = 0; i < _freqs.size(); i++) {
-        for (auto itr = _freqs[i].begin(); itr != _freqs[i].end(); ++itr) {
-            if (display_count) {
-                if (display_count_after) {
-                    cout << itr->first << '#' << itr->second << endl;
-                } else {
-                    cout << setw(7) << itr->second << " " << itr->first << endl;
-                }
-            } else {
-                cout << itr->first << endl;
+    if (size()) {
+        // Wait for the processing tasks to finish before outputting.
+        wait();
+
+        if (output_dir.empty()) {
+            // Output to stdout.
+            for (int i = 0; i < _freqs.size(); i++) {
+                cout << _freqs[i];
             }
+        } else {
+            // Since we kill all the threads calling wait() above,
+            // reset the threadpool here for outputting tasks.
+            reset();
+            
+            // Output to the output_dir. ie. output_dir/part0000, ...
+            for (int i = 0; i < _freqs.size(); i++) {
+                addTask(new OutputTask(_freqs[i], output_dir, i));
+            }
+
+            // Wait for the outputting tasks to finish.
+            wait();
         }
     }
 }

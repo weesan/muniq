@@ -3,7 +3,7 @@
 
 #include <string>
 #include <unordered_map>
-#include "thread/src/thread.h"
+#include "thread.h"
 #include "freq_table.h"
 
 using namespace std;
@@ -14,14 +14,15 @@ private:
     FreqTables _freqs;
     
 public:
-    Muniq(int parallel);
+    Muniq(int parallel = 0,
+          bool display_count = false,
+          bool display_count_after = false);
     void incFreq(const string &key) {
         _freqs.incFreq(key);
     }
     void process(const string &filename);
     void process(istream &is);
-    void aggregate(void);
-    void output(bool display_count, bool display_count_after);
+    void output(const string &output_dir);
 };
 
 #endif // MUNIQ_H

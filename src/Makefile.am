@@ -5,4 +5,4 @@ muniq_SOURCES = 	\
 	muniq.cc 	\
 	muniq.h		\
 	main.cc 
-AM_CXXFLAGS = -std=c++11
+AM_CXXFLAGS = -std=c++11 -I../thread/include
