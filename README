@@ -3,7 +3,7 @@ options are supported currently, and a couple of extensions.
 
 To clone the repo:
 
-    $ git clone --recurse-submodules git clone --recurse-submodules https://github.com/weesan/muniq.git
+    $ git clone --recurse-submodules https://github.com/weesan/muniq.git
 
 To compile:
 
