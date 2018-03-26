@@ -1,0 +1,17 @@
+This is a multi-threaded version of GNU uniq in C++.  Only a subset of
+options are supported currently, and a couple of extensions.
+
+To compile:
+
+    $ configure
+    $ make
+    $ make install
+
+To run:
+
+    $ muniq -c -P16 *.txt -o output_dir
+
+Comments, questions and pull requests are equally welcome.
+--
+Thanks,
+-WeeSan <weesan@weesan.com>
