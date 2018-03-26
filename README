@@ -1,6 +1,10 @@
 This is a multi-threaded version of GNU uniq in C++.  Only a subset of
 options are supported currently, and a couple of extensions.
 
+To clone the repo:
+
+    $ git clone --recurse-submodules git clone --recurse-submodules git@github.com:weesan/muniq
+
 To compile:
 
     $ configure
