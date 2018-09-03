@@ -12,9 +12,11 @@ class Muniq : public ThreadPool {
 private:
     FreqTable _freq;
     FreqTables _freqs;
+    int _key;
     
 public:
     Muniq(int parallel = 0,
+          int key = 0,
           bool display_count = false,
           bool display_count_after = false);
     void incFreq(const string &key) {

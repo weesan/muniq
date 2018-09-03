@@ -8,11 +8,13 @@ class CountTask : public Task {
 private:
     Muniq &_muniq;
     string _filename;
+    int _key;
     
 public:
-    CountTask(Muniq &muniq, const string  &filename) :
+    CountTask(Muniq &muniq, const string  &filename, int key) :
         _muniq(muniq),
-        _filename(filename) {
+        _filename(filename),
+        _key(key) {
     }
     bool run(void) {
         ifstream ifs(_filename);
@@ -26,7 +28,20 @@ public:
                 if (line.empty()) {
                     continue;
                 }
-                _muniq.incFreq(line);
+                if (_key == 0) {
+                    // Consider the whole line.
+                    _muniq.incFreq(line);
+                } else {
+                    // Split the line until the key is found.
+                    string token;
+                    istringstream is(line);
+                    for (int i = 0; getline(is, token, '\t'); i++) {
+                        if (_key == (i + 1)) {
+                            _muniq.incFreq(token);
+                            break;
+                        }
+                    }
+                }
             }
         }
         return true;
@@ -60,9 +75,11 @@ public:
 };
 
 Muniq::Muniq(int parallel,
+             int key,
              bool display_count,
              bool display_count_after) :
     ThreadPool(parallel),
+    _key(key),
     _freq(FreqTable(display_count, display_count_after)) {
     for (int i = 0; i < 101; i++) {
         _freqs.push_back(FreqTable(display_count, display_count_after));
@@ -72,7 +89,7 @@ Muniq::Muniq(int parallel,
 // Multi-threaded version.
 void Muniq::process (const string &filename)
 {
-    addTask(new CountTask(*this, filename));
+    addTask(new CountTask(*this, filename, _key));
 }
 
 // Single-threaded version reading from stdin.
