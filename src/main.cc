@@ -14,13 +14,20 @@ int main (int argc, char *argv[])
     int parallel = 0;
     string output_dir = "";
     int key = 0;
+    string delimiters = "\t";
 
-    while ((opt = getopt(argc, argv, "ack:P:o:")) != -1) {
+    while ((opt = getopt(argc, argv, "acd:k:P:o:")) != -1) {
         switch (opt) {
         case 'a':
             display_count_after = true;
         case 'c':
             display_count = true;
+            break;
+        case 'd':
+            delimiters = optarg;
+            break;
+        case 'k':
+            key = atoi(optarg);
             break;
         case 'P':
             parallel = atoi(optarg);
@@ -28,16 +35,13 @@ int main (int argc, char *argv[])
         case 'o':
             output_dir = optarg;
             break;
-        case 'k':
-            key = atoi(optarg);
-            break;
         }
     }
 
     argc -= optind;
     argv += optind;
 
-    Muniq muniq(parallel, key, display_count, display_count_after);
+    Muniq muniq(parallel, key, delimiters, display_count, display_count_after);
     
     if (argc) {
         for (int i = 0; i < argc; i++) {

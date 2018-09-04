@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
+#include <string.h>
 #include "muniq.h"
 
 class CountTask : public Task {
@@ -9,12 +10,15 @@ private:
     Muniq &_muniq;
     string _filename;
     int _key;
+    const string _delimiters;
     
 public:
-    CountTask(Muniq &muniq, const string  &filename, int key) :
+    CountTask(Muniq &muniq, const string  &filename,
+              int key, const string &delimiters) :
         _muniq(muniq),
         _filename(filename),
-        _key(key) {
+        _key(key),
+        _delimiters(delimiters) {
     }
     bool run(void) {
         ifstream ifs(_filename);
@@ -33,11 +37,14 @@ public:
                     _muniq.incFreq(line);
                 } else {
                     // Split the line until the key is found.
-                    string token;
-                    istringstream is(line);
-                    for (int i = 0; getline(is, token, '\t'); i++) {
-                        if (_key == (i + 1)) {
-                            _muniq.incFreq(token);
+                    char *saveptr = NULL;
+                    const char *p = strtok_r((char *)line.c_str(),
+                                             _delimiters.c_str(), &saveptr);
+                    for (int i = 1; p;
+                         p = strtok_r(NULL, _delimiters.c_str(), &saveptr),
+                             i++) {
+                        if (_key == i) {
+                            _muniq.incFreq(p);
                             break;
                         }
                     }
@@ -76,20 +83,57 @@ public:
 
 Muniq::Muniq(int parallel,
              int key,
+             const string &delimiters,
              bool display_count,
              bool display_count_after) :
     ThreadPool(parallel),
     _key(key),
+    _delimiters(parse_delimiters(delimiters)),
     _freq(FreqTable(display_count, display_count_after)) {
     for (int i = 0; i < 101; i++) {
         _freqs.push_back(FreqTable(display_count, display_count_after));
     }
 }
 
+// Need to convert special characters escaped with \ into the real ones.
+// Supported special chars are: \t, \n, \r and \.
+string Muniq::parse_delimiters (const string delimiters)
+{
+    string res = "";
+    for (int i = 0; i < delimiters.size(); i++) {
+        char c;
+        switch (c = delimiters[i]) {
+        case '\\':
+            char c2;
+            switch (c2 = delimiters[++i]) {
+            case 't':
+                res += '\t';
+                break;
+            case 'n':
+                res += '\n';
+                break;
+            case 'r':
+                res += '\r';
+                break;
+            case '\\':
+                res += '\\';
+                break;
+            default:
+                break;
+            }
+            break;
+        default:
+            res += c;
+            break;
+        }
+    }
+    return res;
+}
+
 // Multi-threaded version.
 void Muniq::process (const string &filename)
 {
-    addTask(new CountTask(*this, filename, _key));
+    addTask(new CountTask(*this, filename, _key, _delimiters));
 }
 
 // Single-threaded version reading from stdin.
