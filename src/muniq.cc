@@ -10,15 +10,17 @@ private:
     Muniq &_muniq;
     string _filename;
     int _key;
+    bool _display_payload;
     const string _delimiters;
     
 public:
     CountTask(Muniq &muniq, const string  &filename,
-              int key, const string &delimiters) :
+              int key, const string &delimiters, bool display_payload) :
         _muniq(muniq),
         _filename(filename),
         _key(key),
-        _delimiters(delimiters) {
+        _delimiters(delimiters),
+        _display_payload(display_payload) {
     }
     bool run(void) {
         ifstream ifs(_filename);
@@ -38,15 +40,42 @@ public:
                 } else {
                     // Split the line until the key is found.
                     char *saveptr = NULL;
+                    string key_str, payload;
                     const char *p = strtok_r((char *)line.c_str(),
                                              _delimiters.c_str(), &saveptr);
-                    for (int i = 1; p;
-                         p = strtok_r(NULL, _delimiters.c_str(), &saveptr),
-                             i++) {
-                        if (_key == i) {
-                            _muniq.incFreq(p);
-                            break;
+                    
+                    if (_display_payload) {
+                        // When we need to display payload, we need to
+                        // keep track of the payload, duh!
+                        for (int i = 1; p;
+                             p = strtok_r(NULL, _delimiters.c_str(), &saveptr),
+                                 i++) {
+                            if (_key == i) {
+                                key_str = p;
+                            } else {
+                                if (!payload.size()) {
+                                    payload = p;
+                                } else {
+                                    payload += string(" ") + p;
+                                }
+                            }
                         }
+                    } else {
+                        // Otherwise, we break out of the loop as soon
+                        // as we find the key.
+                        for (int i = 1; p;
+                             p = strtok_r(NULL, _delimiters.c_str(), &saveptr),
+                                 i++) {
+                            if (_key == i) {
+                                key_str = p;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Count the key and payload.
+                    if (key_str.size()) {
+                        _muniq.incFreq(key_str, payload);
                     }
                 }
             }
@@ -84,14 +113,18 @@ public:
 Muniq::Muniq(int parallel,
              int key,
              const string &delimiters,
+             bool display_payload,
              bool display_count,
              bool display_count_after) :
     ThreadPool(parallel),
     _key(key),
     _delimiters(parse_delimiters(delimiters)),
-    _freq(FreqTable(display_count, display_count_after)) {
+    _display_payload(display_payload),
+    _freq(FreqTable(display_payload, display_count, display_count_after)) {
     for (int i = 0; i < 101; i++) {
-        _freqs.push_back(FreqTable(display_count, display_count_after));
+        _freqs.push_back(FreqTable(display_payload,
+                                   display_count,
+                                   display_count_after));
     }
 }
 
@@ -133,7 +166,8 @@ string Muniq::parse_delimiters (const string delimiters)
 // Multi-threaded version.
 void Muniq::process (const string &filename)
 {
-    addTask(new CountTask(*this, filename, _key, _delimiters));
+    addTask(new CountTask(*this, filename,
+                          _key, _delimiters, _display_payload));
 }
 
 // Single-threaded version reading from stdin.
@@ -145,7 +179,7 @@ void Muniq::process (istream &is)
         if (line.empty()) {
             continue;
         }
-        _freq[line]++;
+        _freq[line].inc();
     }
 }
 

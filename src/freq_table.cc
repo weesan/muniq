@@ -17,9 +17,14 @@ ostream &FreqTable::print(ostream &os) const {
     for (auto itr = begin(); itr != end(); ++itr) {
         if (_display_count) {
             if (_display_count_after) {
-                os << itr->first << '#' << itr->second << endl;
+                os << itr->first << '#' << itr->second.count() << endl;
             } else {
-                os << setw(7) << itr->second << " " << itr->first << endl;
+                os << setw(7)
+                   << itr->second.count() << " " << itr->first;
+                if (_display_payload) {
+                    os << " " << itr->second.payload();
+                }
+                os << endl;
             }
         } else {
             os << itr->first << endl;
@@ -39,8 +44,8 @@ uint32_t FreqTables::hash (const string &str) const {
     return h;
 }
 
-void FreqTables::incFreq (const string &key)
+void FreqTables::incFreq (const string &key, const string &payload)
 {
     int slot = hash(key) % size();
-    (*this)[slot].incFreq(key);
+    (*this)[slot].incFreq(key, payload);
 }

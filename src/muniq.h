@@ -13,6 +13,7 @@ private:
     FreqTable _freq;
     FreqTables _freqs;
     int _key;
+    bool _display_payload;
     const string _delimiters;
 
 private:
@@ -22,10 +23,11 @@ public:
     Muniq(int parallel = 0,
           int key = 0,
           const string &delimeter = "\t",
+          bool display_payload = false,
           bool display_count = false,
           bool display_count_after = false);
-    void incFreq(const string &key) {
-        _freqs.incFreq(key);
+    void incFreq(const string &key, const string &payload = "") {
+        _freqs.incFreq(key, payload);
     }
     void process(const string &filename);
     void process(istream &is);
