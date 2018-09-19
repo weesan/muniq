@@ -1,6 +1,5 @@
 #ifndef COUNTER_H
 
-#include <list>
 #include <string>
 #include <sstream>
 #include <iterator>
@@ -8,9 +7,10 @@
 
 using namespace std;
 
-class Counter : public list<string> {
+class Counter {
 private:
     size_t _count;
+    string _payload;
 
 public:
     Counter(void) : _count(0) {
@@ -18,20 +18,23 @@ public:
     size_t count(void) const {
         return _count;
     }
-    const string payload (void) const {
-        ostringstream os;
-        copy(begin(), end(), ostream_iterator<string>(os, " "));
-        return os.str();
+    const string &payload (void) const {
+        return _payload;
     }
     void inc (const string &payload = "") {
         _count++;
-        if (payload.size()) {
-            push_back(payload);
+        if (!payload.size()) {
+            return;
+        }           
+        if (!_payload.size()) {
+            _payload = payload;
+        } else {
+            _payload += string(" ") + payload;
         }
     }
     Counter &operator+=(const Counter &c) {
         _count += c.count();
-        copy(c.begin(), c.end(), back_inserter(*this));
+        _payload += string(" ") + c.payload();
         return *this;
     }
 };
