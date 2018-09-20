@@ -6,6 +6,8 @@
 #include "thread.h"
 #include "freq_table.h"
 
+#define DEFAULT_NUM_OF_HASHES    101
+
 using namespace std;
 
 class Muniq : public ThreadPool {
@@ -21,6 +23,7 @@ private:
     
 public:
     Muniq(int parallel = 0,
+          int num_of_hashes = DEFAULT_NUM_OF_HASHES,
           int key = 0,
           const string &delimeter = "\t",
           bool display_payload = false,

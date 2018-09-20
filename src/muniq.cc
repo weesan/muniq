@@ -111,6 +111,7 @@ public:
 };
 
 Muniq::Muniq(int parallel,
+             int num_of_hashes,
              int key,
              const string &delimiters,
              bool display_payload,
@@ -121,7 +122,8 @@ Muniq::Muniq(int parallel,
     _delimiters(parse_delimiters(delimiters)),
     _display_payload(display_payload),
     _freq(FreqTable(display_payload, display_count, display_count_after)) {
-    for (int i = 0; i < 101; i++) {
+    num_of_hashes = num_of_hashes == 0 ? DEFAULT_NUM_OF_HASHES : num_of_hashes;
+    for (int i = 0; i < num_of_hashes; i++) {
         _freqs.push_back(FreqTable(display_payload,
                                    display_count,
                                    display_count_after));
