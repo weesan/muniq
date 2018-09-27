@@ -17,6 +17,7 @@ private:
     int _key;
     bool _display_payload;
     const string _delimiters;
+    int _verbose;
 
 private:
     string parse_delimiters (const string delimiters);
@@ -28,7 +29,8 @@ public:
           const string &delimeter = "\t",
           bool display_payload = false,
           bool display_count = false,
-          bool display_count_after = false);
+          bool display_count_after = false,
+          int verbose = 0);
     void incFreq(const string &key, const string &payload = "") {
         _freqs.incFreq(key, payload);
     }

@@ -17,11 +17,13 @@ int main (int argc, char *argv[])
     string output_dir = "";
     int key = 0;
     string delimiters = "\t";
+    int verbose = 0;
 
-    while ((opt = getopt(argc, argv, "acd:k:n:pP:o:")) != -1) {
+    while ((opt = getopt(argc, argv, "acd:k:n:pP:o:v")) != -1) {
         switch (opt) {
         case 'a':
             display_count_after = true;
+            break;
         case 'c':
             display_count = true;
             break;
@@ -43,6 +45,9 @@ int main (int argc, char *argv[])
         case 'o':
             output_dir = optarg;
             break;
+        case 'v':
+            verbose++;
+            break;
         }
     }
 
@@ -50,7 +55,8 @@ int main (int argc, char *argv[])
     argv += optind;
 
     Muniq muniq(parallel, num_of_hashes, key, delimiters,
-                display_payload, display_count, display_count_after);
+                display_payload, display_count, display_count_after,
+                verbose);
     
     if (argc) {
         for (int i = 0; i < argc; i++) {

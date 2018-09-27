@@ -12,6 +12,7 @@ private:
     int _key;
     bool _display_payload;
     const string _delimiters;
+    int _verbose;
     
 private:
     void split(const string &s, const string &delim, vector<string> &res) {
@@ -32,14 +33,20 @@ private:
     
 public:
     CountTask(Muniq &muniq, const string  &filename,
-              int key, const string &delimiters, bool display_payload) :
+              int key, const string &delimiters, bool display_payload,
+              int verbose) :
         _muniq(muniq),
         _filename(filename),
         _key(key),
         _delimiters(delimiters),
-        _display_payload(display_payload) {
+        _display_payload(display_payload),
+        _verbose(verbose) {
     }
     bool run(void) {
+        if (_verbose) {
+            cerr << "Processing " << _filename << " ..." << endl;
+        }
+        
         ifstream ifs(_filename);
         if (!ifs) { 
             cerr << "Failed to open " << _filename << endl;
@@ -97,16 +104,26 @@ private:
     const FreqTable &_freq_table;
     int _part;
     string _output_dir;
+    int _verbose;
 
 public:
-    OutputTask(const FreqTable &freq_table, const string &output_dir, int part) :
+    OutputTask(const FreqTable &freq_table,
+               const string &output_dir,
+               int part,
+               int verbose) :
         _freq_table(freq_table),
         _output_dir(output_dir),
-        _part(part) {
+        _part(part),
+        _verbose(verbose) {
     }
     bool run(void) {
         stringstream ss;
         ss << _output_dir << "/part" << setw(4) << setfill('0') << _part;
+
+        if (_verbose) {
+            cerr << "Outputting " << ss.str() << " ..." << endl;
+        }
+        
         ofstream ofs(ss.str());
         if (!ofs) {
             cerr << "Failed to open " << ss.str() << endl;
@@ -124,12 +141,14 @@ Muniq::Muniq(int parallel,
              const string &delimiters,
              bool display_payload,
              bool display_count,
-             bool display_count_after) :
+             bool display_count_after,
+             int verbose) :
     ThreadPool(parallel),
     _key(key),
     _delimiters(parse_delimiters(delimiters)),
     _display_payload(display_payload),
-    _freq(FreqTable(display_payload, display_count, display_count_after)) {
+    _freq(FreqTable(display_payload, display_count, display_count_after)),
+    _verbose(verbose) {
     num_of_hashes = num_of_hashes == 0 ? DEFAULT_NUM_OF_HASHES : num_of_hashes;
     for (int i = 0; i < num_of_hashes; i++) {
         _freqs.push_back(FreqTable(display_payload,
@@ -177,7 +196,7 @@ string Muniq::parse_delimiters (const string delimiters)
 void Muniq::process (const string &filename)
 {
     addTask(new CountTask(*this, filename,
-                          _key, _delimiters, _display_payload));
+                          _key, _delimiters, _display_payload, _verbose));
 }
 
 // Single-threaded version reading from stdin.
@@ -215,7 +234,7 @@ void Muniq::output (const string &output_dir)
             
             // Output to the output_dir. ie. output_dir/part0000, ...
             for (int i = 0; i < _freqs.size(); i++) {
-                addTask(new OutputTask(_freqs[i], output_dir, i));
+                addTask(new OutputTask(_freqs[i], output_dir, i, _verbose));
             }
 
             // Wait for the outputting tasks to finish.
