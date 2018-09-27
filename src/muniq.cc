@@ -13,6 +13,23 @@ private:
     bool _display_payload;
     const string _delimiters;
     
+private:
+    void split(const string &s, const string &delim, vector<string> &res) {
+        size_t p1 = 0, p2 = 0;
+        for (p2 = s.find(delim);
+             p2 != s.npos;
+             p1 = p2 + 1, p2 = s.find(delim, p1)) {
+            size_t len = p2 - p1;
+            if (len) {
+                res.push_back(s.substr(p1, len));
+            }
+        }
+        // The last word if available.
+        if (p1 < s.size()) {
+            res.push_back(s.substr(p1));
+        }
+    }
+    
 public:
     CountTask(Muniq &muniq, const string  &filename,
               int key, const string &delimiters, bool display_payload) :
@@ -27,59 +44,50 @@ public:
         if (!ifs) { 
             cerr << "Failed to open " << _filename << endl;
             return true;
-        } else {
-            string line;
+        }
 
-            while (getline(ifs, line)) {
-                if (line.empty()) {
-                    continue;
-                }
-                if (_key == 0) {
-                    // Consider the whole line.
-                    _muniq.incFreq(line);
-                } else {
-                    // Split the line until the key is found.
-                    char *saveptr = NULL;
-                    string key_str, payload;
-                    const char *p = strtok_r((char *)line.c_str(),
-                                             _delimiters.c_str(), &saveptr);
-                    
-                    if (_display_payload) {
-                        // When we need to display payload, we need to
-                        // keep track of the payload, duh!
-                        for (int i = 1; p;
-                             p = strtok_r(NULL, _delimiters.c_str(), &saveptr),
-                                 i++) {
-                            if (_key == i) {
-                                key_str = p;
-                            } else {
-                                if (!payload.size()) {
-                                    payload = p;
-                                } else {
-                                    payload += string(" ") + p;
-                                }
-                            }
-                        }
-                    } else {
-                        // Otherwise, we break out of the loop as soon
-                        // as we find the key.
-                        for (int i = 1; p;
-                             p = strtok_r(NULL, _delimiters.c_str(), &saveptr),
-                                 i++) {
-                            if (_key == i) {
-                                key_str = p;
-                                break;
-                            }
-                        }
+        string line;
+        while (getline(ifs, line)) {
+            if (line.empty()) {
+                continue;
+            }
+                
+            // If no key is given, treat the whole line as the key.
+            if (_key == 0) {
+                _muniq.incFreq(line);
+                continue;
+            }
+
+            // When a key is given, ...
+            vector<string> res;
+            string &key_str = line;
+            string payload;
+
+            split(line, _delimiters, res);
+
+            // Get the correct key.
+            if (_key <= res.size()) {
+                key_str = res[_key - 1];
+            }
+
+            // Collect the payload when instructed.
+            if (_display_payload) {
+                for (int i = 0; i < res.size(); i++) {
+                    if (i == _key - 1) {
+                        continue;
                     }
-                    
-                    // Count the key and payload.
-                    if (key_str.size()) {
-                        _muniq.incFreq(key_str, payload);
+                    if (!payload.size()) {
+                        payload = res[i];
+                    } else {
+                        payload += string(" ") + res[i];
                     }
                 }
             }
+
+            // Count the key.
+            _muniq.incFreq(key_str, payload);
         }
+            
         return true;
     }
 };
