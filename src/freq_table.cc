@@ -17,17 +17,13 @@ ostream &FreqTable::print(ostream &os) const {
     for (auto itr = begin(); itr != end(); ++itr) {
         if (_display_count) {
             if (_display_count_after) {
-                //os << itr->first << '#' << itr->second.count() << endl;
-                os << itr->first << '#' << itr->second << endl;
+                os << itr->first << '#' << itr->second.count() << endl;
             } else {
                 os << setw(7)
-                   //<< itr->second.count() << " " << itr->first;
-                   << itr->second << " " << itr->first;
-                /*
+                   << itr->second.count() << " " << itr->first;
                 if (_display_payload) {
                     os << " " << itr->second.payload();
                 }
-                */
                 os << endl;
             }
         } else {

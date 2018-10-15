@@ -6,12 +6,11 @@
 #include <ostream>
 #include <unordered_map>
 #include "thread.h"
-//#include "counter.h"
+#include "counter.h"
 
 using namespace std;
 
-//class FreqTable : public unordered_map<string, Counter> {
-class FreqTable : public unordered_map<string, size_t> {
+class FreqTable : public unordered_map<string, Counter> {
 private:
     Mutex _mutex;
     bool _display_payload;
@@ -28,8 +27,7 @@ public:
     }
     void incFreq(const string &key, const string &payload = "") {
         _mutex.lock();
-        //(*this)[key].inc(payload);
-        (*this)[key]++;
+        (*this)[key].inc(payload);
         _mutex.unlock();
     }
     void merge(const FreqTable &freq);
