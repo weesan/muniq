@@ -16,6 +16,13 @@ private:
     
 private:
     void split(const string &s, const string &delim, vector<string> &res) {
+        char *saveptr = NULL;
+        for (char *p = strtok_r((char *)s.c_str(), delim.c_str(), &saveptr);
+             p;
+             p = strtok_r(NULL, delim.c_str(), &saveptr)) {
+            res.push_back(p);
+        }
+        /*
         size_t p1 = 0, p2 = 0;
         for (p2 = s.find(delim);
              p2 != s.npos;
@@ -29,6 +36,7 @@ private:
         if (p1 < s.size()) {
             res.push_back(s.substr(p1));
         }
+        */
     }
     
 public:
