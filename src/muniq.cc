@@ -208,7 +208,8 @@ void Muniq::process (istream &is)
         if (line.empty()) {
             continue;
         }
-        _freq[line].inc();
+        //_freq[line].inc();
+        _freq[line]++;
     }
 }
 
